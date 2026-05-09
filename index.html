@@ -55,11 +55,12 @@
         <div class="settings-panel" id="settingsPanel" hidden>
           <label>
             <span>Starting time</span>
-            <select id="baseDuration">
-              <option value="180">3 minutes</option>
-              <option value="300">5 minutes</option>
-              <option value="600">10 minutes</option>
-            </select>
+            <div class="time-inputs">
+              <input id="baseMinutes" type="number" min="0" max="999" step="1" inputmode="numeric" aria-label="Starting minutes">
+              <span>min</span>
+              <input id="baseSeconds" type="number" min="0" max="59" step="1" inputmode="numeric" aria-label="Starting seconds">
+              <span>sec</span>
+            </div>
           </label>
           <label>
             <span>Increase</span>

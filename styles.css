@@ -32,6 +32,7 @@ body {
 }
 
 button,
+input,
 select {
   font: inherit;
 }
@@ -207,7 +208,8 @@ select {
   font-weight: 700;
 }
 
-.settings-panel select {
+.settings-panel select,
+.settings-panel input {
   min-height: 2.75rem;
   width: 100%;
   border: 1px solid var(--line);
@@ -215,6 +217,24 @@ select {
   padding: 0 0.8rem;
   background: white;
   color: var(--text);
+}
+
+.time-inputs {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) auto;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.time-inputs span {
+  color: var(--muted);
+  font-size: 0.86rem;
+}
+
+.time-inputs input {
+  text-align: center;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
 }
 
 .completion {

@@ -1,4 +1,4 @@
-const CACHE_NAME = "dish-habit-timer-v4";
+const CACHE_NAME = "dish-habit-timer-v5";
 const APP_SHELL = [
   "./",
   "./index.html",

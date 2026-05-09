@@ -30,7 +30,8 @@ const elements = {
   totalDone: document.getElementById("totalDone"),
   settingsToggle: document.getElementById("settingsToggle"),
   settingsPanel: document.getElementById("settingsPanel"),
-  baseDuration: document.getElementById("baseDuration"),
+  baseMinutes: document.getElementById("baseMinutes"),
+  baseSeconds: document.getElementById("baseSeconds"),
   increment: document.getElementById("increment"),
   maxDuration: document.getElementById("maxDuration"),
   resetProgressButton: document.getElementById("resetProgressButton"),
@@ -80,7 +81,8 @@ function renderIdle() {
   elements.resetTimerButton.hidden = true;
   elements.nextDuration.textContent = formatTime(nextDurationAfterCompletion());
   elements.totalDone.textContent = String(state.settings.completed);
-  elements.baseDuration.value = String(state.settings.baseDuration);
+  elements.baseMinutes.value = String(Math.floor(state.settings.baseDuration / 60));
+  elements.baseSeconds.value = String(state.settings.baseDuration % 60);
   elements.increment.value = String(state.settings.increment);
   elements.maxDuration.value = String(state.settings.maxDuration);
 }
@@ -196,6 +198,25 @@ async function playDoneSound() {
   });
 }
 
+function normalizeBaseDuration() {
+  const minutes = Math.max(0, Number.parseInt(elements.baseMinutes.value, 10) || 0);
+  const seconds = Math.min(59, Math.max(0, Number.parseInt(elements.baseSeconds.value, 10) || 0));
+  return minutes * 60 + seconds;
+}
+
+function updateBaseDuration() {
+  state.settings.baseDuration = Math.max(1, normalizeBaseDuration());
+
+  if (state.settings.baseDuration > state.settings.maxDuration) {
+    state.settings.maxDuration = state.settings.baseDuration;
+  }
+
+  saveSettings();
+  if (!state.running && state.timerId === null) {
+    renderIdle();
+  }
+}
+
 function updateSetting(key, value) {
   state.settings[key] = Number(value);
 
@@ -234,7 +255,8 @@ elements.settingsToggle.addEventListener("click", () => {
   elements.settingsToggle.setAttribute("aria-expanded", String(willOpen));
 });
 
-elements.baseDuration.addEventListener("change", (event) => updateSetting("baseDuration", event.target.value));
+elements.baseMinutes.addEventListener("change", updateBaseDuration);
+elements.baseSeconds.addEventListener("change", updateBaseDuration);
 elements.increment.addEventListener("change", (event) => updateSetting("increment", event.target.value));
 elements.maxDuration.addEventListener("change", (event) => updateSetting("maxDuration", event.target.value));
 elements.resetProgressButton.addEventListener("click", () => {
