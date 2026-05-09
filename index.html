@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#1f6f5b">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Dish Timer">
+    <title>Dish Timer</title>
+    <link rel="manifest" href="./manifest.webmanifest">
+    <link rel="icon" href="./icon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="./icon-192.png">
+    <link rel="stylesheet" href="./styles.css">
+  </head>
+  <body>
+    <main class="app" aria-live="polite">
+      <section class="timer-panel">
+        <p class="eyebrow" id="sessionLabel">Today</p>
+        <div class="timer" id="timerDisplay" role="timer" aria-label="Time remaining">05:00</div>
+
+        <div class="progress-track" aria-hidden="true">
+          <div class="progress-fill" id="progressFill"></div>
+        </div>
+
+        <div class="controls">
+          <button class="primary-button" id="startButton" type="button">Start washing dishes</button>
+          <button class="ghost-button" id="resetTimerButton" type="button" hidden>Reset timer</button>
+        </div>
+      </section>
+
+      <section class="stats" aria-label="Progress">
+        <div>
+          <span class="stat-label">After completion</span>
+          <strong id="nextDuration">05:10</strong>
+        </div>
+        <div>
+          <span class="stat-label">Completed</span>
+          <strong id="totalDone">0</strong>
+        </div>
+      </section>
+
+      <section class="settings" aria-label="Settings">
+        <button class="settings-summary" id="settingsToggle" type="button" aria-expanded="false">
+          Settings
+        </button>
+        <div class="settings-panel" id="settingsPanel" hidden>
+          <label>
+            <span>Starting time</span>
+            <select id="baseDuration">
+              <option value="180">3 minutes</option>
+              <option value="300">5 minutes</option>
+              <option value="600">10 minutes</option>
+            </select>
+          </label>
+          <label>
+            <span>Increase</span>
+            <select id="increment">
+              <option value="5">5 seconds</option>
+              <option value="10">10 seconds</option>
+              <option value="15">15 seconds</option>
+              <option value="30">30 seconds</option>
+            </select>
+          </label>
+          <label>
+            <span>Maximum</span>
+            <select id="maxDuration">
+              <option value="900">15 minutes</option>
+              <option value="1200">20 minutes</option>
+              <option value="1800">30 minutes</option>
+              <option value="3600">60 minutes</option>
+            </select>
+          </label>
+          <button class="danger-button" id="resetProgressButton" type="button">Reset progress</button>
+        </div>
+      </section>
+    </main>
+
+    <div class="completion" id="completionDialog" role="dialog" aria-modal="true" aria-labelledby="completionTitle" hidden>
+      <div class="completion-panel">
+        <h1 id="completionTitle">Done</h1>
+        <p>Next session: <strong id="completedNextDuration">05:10</strong></p>
+        <button class="primary-button" id="completeButton" type="button">Good</button>
+      </div>
+    </div>
+
+    <script src="./app.js" defer></script>
+  </body>
+</html>

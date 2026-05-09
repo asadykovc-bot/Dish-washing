@@ -1,0 +1,234 @@
+:root {
+  color-scheme: light;
+  --bg: #f7f3ea;
+  --panel: #fffdf7;
+  --text: #16231f;
+  --muted: #68746e;
+  --line: #d9d1c3;
+  --accent: #1f6f5b;
+  --accent-dark: #154a3d;
+  --accent-soft: #dbeee8;
+  --danger: #9d342c;
+  --shadow: 0 20px 55px rgba(36, 48, 42, 0.16);
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  min-height: 100%;
+  background: var(--bg);
+}
+
+body {
+  min-height: 100vh;
+  margin: 0;
+  background:
+    linear-gradient(180deg, rgba(31, 111, 91, 0.13), transparent 34rem),
+    var(--bg);
+  color: var(--text);
+}
+
+button,
+select {
+  font: inherit;
+}
+
+.app {
+  width: min(100%, 32rem);
+  min-height: 100vh;
+  margin: 0 auto;
+  padding: max(1.25rem, env(safe-area-inset-top)) 1rem max(1.5rem, env(safe-area-inset-bottom));
+  display: grid;
+  align-content: center;
+  gap: 1rem;
+}
+
+.timer-panel {
+  display: grid;
+  gap: 1.25rem;
+  padding: 1.25rem;
+  border: 1px solid rgba(217, 209, 195, 0.9);
+  border-radius: 8px;
+  background: rgba(255, 253, 247, 0.94);
+  box-shadow: var(--shadow);
+}
+
+.eyebrow {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.timer {
+  min-height: 7.5rem;
+  display: grid;
+  place-items: center;
+  font-size: clamp(4.6rem, 22vw, 7.4rem);
+  line-height: 0.95;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0;
+}
+
+.progress-track {
+  height: 0.75rem;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #e7dfd2;
+}
+
+.progress-fill {
+  width: 0%;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--accent);
+  transition: width 0.25s ease;
+}
+
+.controls {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.primary-button,
+.ghost-button,
+.danger-button,
+.settings-summary {
+  min-height: 3.25rem;
+  border: 0;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 800;
+}
+
+.primary-button {
+  color: white;
+  background: var(--accent);
+}
+
+.primary-button:active {
+  background: var(--accent-dark);
+}
+
+.ghost-button,
+.settings-summary {
+  color: var(--accent-dark);
+  background: var(--accent-soft);
+}
+
+.danger-button {
+  color: white;
+  background: var(--danger);
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.stats > div {
+  min-width: 0;
+  padding: 1rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(255, 253, 247, 0.82);
+}
+
+.stat-label {
+  display: block;
+  margin-bottom: 0.35rem;
+  color: var(--muted);
+  font-size: 0.86rem;
+  font-weight: 700;
+}
+
+.stats strong {
+  font-size: 1.4rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.settings {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.settings-panel {
+  display: grid;
+  gap: 0.85rem;
+  padding: 1rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(255, 253, 247, 0.82);
+}
+
+.settings-panel label {
+  display: grid;
+  gap: 0.4rem;
+  color: var(--muted);
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.settings-panel select {
+  min-height: 2.75rem;
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 0 0.8rem;
+  background: white;
+  color: var(--text);
+}
+
+.completion {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: rgba(22, 35, 31, 0.44);
+}
+
+.completion[hidden],
+[hidden] {
+  display: none !important;
+}
+
+.completion-panel {
+  width: min(100%, 24rem);
+  display: grid;
+  gap: 1rem;
+  padding: 1.25rem;
+  border-radius: 8px;
+  background: var(--panel);
+  box-shadow: var(--shadow);
+  text-align: center;
+}
+
+.completion-panel h1,
+.completion-panel p {
+  margin: 0;
+}
+
+.completion-panel h1 {
+  font-size: 2.4rem;
+}
+
+@media (max-width: 360px) {
+  .app {
+    padding-inline: 0.75rem;
+  }
+
+  .timer-panel {
+    padding: 1rem;
+  }
+
+  .stats {
+    grid-template-columns: 1fr;
+  }
+}
