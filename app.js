@@ -1,4 +1,5 @@
 const STORAGE_KEY = "dishHabitTimer:v1";
+const SOUND_ENABLED_KEY = "dishHabitTimer:soundEnabled";
 
 const defaults = {
   baseDuration: 300,
@@ -19,6 +20,8 @@ const state = {
 };
 
 const elements = {
+  soundBanner: document.getElementById("soundBanner"),
+  enableSoundButton: document.getElementById("enableSoundButton"),
   sessionLabel: document.getElementById("sessionLabel"),
   timerDisplay: document.getElementById("timerDisplay"),
   progressFill: document.getElementById("progressFill"),
@@ -31,6 +34,7 @@ const elements = {
   baseDuration: document.getElementById("baseDuration"),
   increment: document.getElementById("increment"),
   maxDuration: document.getElementById("maxDuration"),
+  testSoundButton: document.getElementById("testSoundButton"),
   resetProgressButton: document.getElementById("resetProgressButton"),
   completionDialog: document.getElementById("completionDialog"),
   completedNextDuration: document.getElementById("completedNextDuration"),
@@ -81,6 +85,10 @@ function renderIdle() {
   elements.baseDuration.value = String(state.settings.baseDuration);
   elements.increment.value = String(state.settings.increment);
   elements.maxDuration.value = String(state.settings.maxDuration);
+}
+
+function renderSoundBanner() {
+  elements.soundBanner.hidden = localStorage.getItem(SOUND_ENABLED_KEY) === "true";
 }
 
 function renderRunning() {
@@ -143,7 +151,7 @@ function finishTimer() {
   state.running = false;
   state.remaining = 0;
   renderRunning();
-  playDoneSound();
+  notifyDone();
   state.settings.completed += 1;
   state.settings.lastCompletedAt = new Date().toISOString();
   saveSettings();
@@ -152,34 +160,45 @@ function finishTimer() {
   elements.completeButton.focus();
 }
 
-function unlockAudio() {
+async function unlockAudio() {
   if (!state.audioContext) {
     state.audioContext = new (window.AudioContext || window.webkitAudioContext)();
   }
 
   if (state.audioContext.state === "suspended") {
-    state.audioContext.resume();
+    await state.audioContext.resume();
   }
 }
 
-function playDoneSound() {
-  if (!state.audioContext) {
+async function notifyDone() {
+  if ("vibrate" in navigator) {
+    navigator.vibrate([250, 120, 250]);
+  }
+
+  await playDoneSound();
+}
+
+async function playDoneSound() {
+  try {
+    await unlockAudio();
+  } catch {
     return;
   }
 
   const context = state.audioContext;
-  const now = context.currentTime;
-  [660, 880, 660].forEach((frequency, index) => {
+  const now = context.currentTime + 0.04;
+  [523, 659, 784, 1047].forEach((frequency, index) => {
     const oscillator = context.createOscillator();
     const gain = context.createGain();
-    oscillator.type = "sine";
-    oscillator.frequency.setValueAtTime(frequency, now + index * 0.18);
-    gain.gain.setValueAtTime(0.0001, now + index * 0.18);
-    gain.gain.exponentialRampToValueAtTime(0.18, now + index * 0.18 + 0.03);
-    gain.gain.exponentialRampToValueAtTime(0.0001, now + index * 0.18 + 0.16);
+    const start = now + index * 0.2;
+    oscillator.type = "triangle";
+    oscillator.frequency.setValueAtTime(frequency, start);
+    gain.gain.setValueAtTime(0.0001, start);
+    gain.gain.exponentialRampToValueAtTime(0.35, start + 0.03);
+    gain.gain.exponentialRampToValueAtTime(0.0001, start + 0.18);
     oscillator.connect(gain).connect(context.destination);
-    oscillator.start(now + index * 0.18);
-    oscillator.stop(now + index * 0.18 + 0.18);
+    oscillator.start(start);
+    oscillator.stop(start + 0.2);
   });
 }
 
@@ -206,6 +225,12 @@ elements.startButton.addEventListener("click", () => {
   }
 });
 
+elements.enableSoundButton.addEventListener("click", async () => {
+  await notifyDone();
+  localStorage.setItem(SOUND_ENABLED_KEY, "true");
+  renderSoundBanner();
+});
+
 elements.resetTimerButton.addEventListener("click", resetTimer);
 
 elements.completeButton.addEventListener("click", () => {
@@ -222,6 +247,7 @@ elements.settingsToggle.addEventListener("click", () => {
 elements.baseDuration.addEventListener("change", (event) => updateSetting("baseDuration", event.target.value));
 elements.increment.addEventListener("change", (event) => updateSetting("increment", event.target.value));
 elements.maxDuration.addEventListener("change", (event) => updateSetting("maxDuration", event.target.value));
+elements.testSoundButton.addEventListener("click", notifyDone);
 
 elements.resetProgressButton.addEventListener("click", () => {
   const confirmed = window.confirm("Reset completed sessions and return the timer to the starting time?");
@@ -242,3 +268,4 @@ if ("serviceWorker" in navigator) {
 }
 
 renderIdle();
+renderSoundBanner();
