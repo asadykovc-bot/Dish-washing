@@ -168,7 +168,7 @@ async function unlockAudio() {
 
 async function notifyDone() {
   if ("vibrate" in navigator) {
-    navigator.vibrate([250, 120, 250]);
+    navigator.vibrate([500, 180, 500, 180, 700, 250, 900]);
   }
 
   await playDoneSound();
@@ -183,18 +183,41 @@ async function playDoneSound() {
 
   const context = state.audioContext;
   const now = context.currentTime + 0.04;
-  [523, 659, 784, 1047].forEach((frequency, index) => {
+  const masterGain = context.createGain();
+  const compressor = context.createDynamicsCompressor();
+  compressor.threshold.setValueAtTime(-24, now);
+  compressor.knee.setValueAtTime(18, now);
+  compressor.ratio.setValueAtTime(8, now);
+  compressor.attack.setValueAtTime(0.003, now);
+  compressor.release.setValueAtTime(0.2, now);
+  masterGain.gain.setValueAtTime(0.0001, now);
+  masterGain.gain.exponentialRampToValueAtTime(0.95, now + 0.04);
+  masterGain.gain.setValueAtTime(0.95, now + 5.8);
+  masterGain.gain.exponentialRampToValueAtTime(0.0001, now + 6.2);
+  masterGain.connect(compressor).connect(context.destination);
+
+  const pattern = [
+    1568, 1175, 1568, 1175,
+    1760, 1319, 1760, 1319,
+    1976, 1480, 1976, 1480,
+    2093, 1568, 2093, 1568,
+    1976, 1480, 1976, 1480,
+    1760, 1319, 1760, 1319
+  ];
+
+  pattern.forEach((frequency, index) => {
     const oscillator = context.createOscillator();
     const gain = context.createGain();
-    const start = now + index * 0.2;
-    oscillator.type = "triangle";
+    const start = now + index * 0.24;
+    oscillator.type = index % 2 === 0 ? "square" : "sawtooth";
     oscillator.frequency.setValueAtTime(frequency, start);
     gain.gain.setValueAtTime(0.0001, start);
-    gain.gain.exponentialRampToValueAtTime(0.35, start + 0.03);
-    gain.gain.exponentialRampToValueAtTime(0.0001, start + 0.18);
-    oscillator.connect(gain).connect(context.destination);
+    gain.gain.exponentialRampToValueAtTime(0.6, start + 0.015);
+    gain.gain.setValueAtTime(0.6, start + 0.16);
+    gain.gain.exponentialRampToValueAtTime(0.0001, start + 0.22);
+    oscillator.connect(gain).connect(masterGain);
     oscillator.start(start);
-    oscillator.stop(start + 0.2);
+    oscillator.stop(start + 0.24);
   });
 }
 
