@@ -1,5 +1,4 @@
 const STORAGE_KEY = "dishHabitTimer:v1";
-const SOUND_ENABLED_KEY = "dishHabitTimer:soundEnabled";
 
 const defaults = {
   baseDuration: 300,
@@ -21,7 +20,7 @@ const state = {
 
 const elements = {
   soundBanner: document.getElementById("soundBanner"),
-  enableSoundButton: document.getElementById("enableSoundButton"),
+  testSoundButton: document.getElementById("testSoundButton"),
   sessionLabel: document.getElementById("sessionLabel"),
   timerDisplay: document.getElementById("timerDisplay"),
   progressFill: document.getElementById("progressFill"),
@@ -34,7 +33,6 @@ const elements = {
   baseDuration: document.getElementById("baseDuration"),
   increment: document.getElementById("increment"),
   maxDuration: document.getElementById("maxDuration"),
-  testSoundButton: document.getElementById("testSoundButton"),
   resetProgressButton: document.getElementById("resetProgressButton"),
   completionDialog: document.getElementById("completionDialog"),
   completedNextDuration: document.getElementById("completedNextDuration"),
@@ -85,10 +83,6 @@ function renderIdle() {
   elements.baseDuration.value = String(state.settings.baseDuration);
   elements.increment.value = String(state.settings.increment);
   elements.maxDuration.value = String(state.settings.maxDuration);
-}
-
-function renderSoundBanner() {
-  elements.soundBanner.hidden = localStorage.getItem(SOUND_ENABLED_KEY) === "true";
 }
 
 function renderRunning() {
@@ -225,11 +219,7 @@ elements.startButton.addEventListener("click", () => {
   }
 });
 
-elements.enableSoundButton.addEventListener("click", async () => {
-  await notifyDone();
-  localStorage.setItem(SOUND_ENABLED_KEY, "true");
-  renderSoundBanner();
-});
+elements.testSoundButton.addEventListener("click", notifyDone);
 
 elements.resetTimerButton.addEventListener("click", resetTimer);
 
@@ -247,8 +237,6 @@ elements.settingsToggle.addEventListener("click", () => {
 elements.baseDuration.addEventListener("change", (event) => updateSetting("baseDuration", event.target.value));
 elements.increment.addEventListener("change", (event) => updateSetting("increment", event.target.value));
 elements.maxDuration.addEventListener("change", (event) => updateSetting("maxDuration", event.target.value));
-elements.testSoundButton.addEventListener("click", notifyDone);
-
 elements.resetProgressButton.addEventListener("click", () => {
   const confirmed = window.confirm("Reset completed sessions and return the timer to the starting time?");
   if (!confirmed) {
@@ -268,4 +256,3 @@ if ("serviceWorker" in navigator) {
 }
 
 renderIdle();
-renderSoundBanner();
