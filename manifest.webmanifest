@@ -1,8 +1,8 @@
 {
-  "name": "Dish Timer",
-  "short_name": "Dishes",
-  "description": "A gentle timer for building a dishwashing habit.",
-  "start_url": "./",
+  "name": "Kitchen Cleaning",
+  "short_name": "Kitchen",
+  "description": "A gentle timer for building a kitchen cleaning habit.",
+  "start_url": "./?v=9",
   "scope": "./",
   "display": "standalone",
   "background_color": "#f7f3ea",

@@ -6,8 +6,8 @@
     <meta name="theme-color" content="#1f6f5b">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <meta name="apple-mobile-web-app-title" content="Dish Timer">
-    <title>Dish Timer</title>
+    <meta name="apple-mobile-web-app-title" content="Kitchen Cleaning">
+    <title>Kitchen Cleaning</title>
     <link rel="manifest" href="./manifest.webmanifest">
     <link rel="icon" href="./icon.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="./icon-192.png">
@@ -32,14 +32,14 @@
         </div>
 
         <div class="controls">
-          <button class="primary-button" id="startButton" type="button">Start washing dishes</button>
+          <button class="primary-button" id="startButton" type="button">Start cleaning</button>
           <button class="ghost-button" id="resetTimerButton" type="button" hidden>Reset timer</button>
         </div>
       </section>
 
       <section class="stats" aria-label="Progress">
         <div>
-          <span class="stat-label">After completion</span>
+          <span class="stat-label">Next active day</span>
           <strong id="nextDuration">05:10</strong>
         </div>
         <div>
@@ -88,11 +88,11 @@
     <div class="completion" id="completionDialog" role="dialog" aria-modal="true" aria-labelledby="completionTitle" hidden>
       <div class="completion-panel">
         <h1 id="completionTitle">Done</h1>
-        <p>Next session: <strong id="completedNextDuration">05:10</strong></p>
+        <p>Next active day: <strong id="completedNextDuration">05:10</strong></p>
         <button class="primary-button" id="completeButton" type="button">Good</button>
       </div>
     </div>
 
-    <script src="./app.js?v=7" defer></script>
+    <script src="./app.js?v=9" defer></script>
   </body>
 </html>

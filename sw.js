@@ -1,9 +1,9 @@
-const CACHE_NAME = "dish-habit-timer-v7";
+const CACHE_NAME = "kitchen-cleaning-v9";
 const APP_SHELL = [
   "./",
   "./index.html",
   "./styles.css",
-  "./app.js?v=7",
+  "./app.js?v=9",
   "./manifest.webmanifest",
   "./icon.svg",
   "./icon-192.png",

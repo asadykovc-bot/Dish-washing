@@ -4,7 +4,8 @@ const defaults = {
   baseDuration: 300,
   increment: 10,
   maxDuration: 1200,
-  completed: 0,
+  level: 0,
+  totalDone: 0,
   lastCompletedAt: null
 };
 
@@ -42,8 +43,13 @@ const elements = {
 
 function loadSettings() {
   try {
-    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
-    return { ...defaults, ...saved };
+    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
+    const migrated = { ...defaults, ...saved };
+    migrated.level = Number.isFinite(saved.level) ? saved.level : (saved.completed || 0);
+    migrated.totalDone = Number.isFinite(saved.totalDone) ? saved.totalDone : (saved.completed || 0);
+    migrated.lastCompletedDate = saved.lastCompletedDate || dateKeyFromIso(saved.lastCompletedAt);
+    delete migrated.completed;
+    return applyMissedDayDecay(migrated);
   } catch {
     return { ...defaults };
   }
@@ -53,13 +59,79 @@ function saveSettings() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state.settings));
 }
 
+function localDateKey(date = new Date()) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function dateKeyFromIso(value) {
+  if (!value) {
+    return null;
+  }
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return null;
+  }
+
+  return localDateKey(date);
+}
+
+function dateFromKey(key) {
+  const [year, month, day] = key.split("-").map(Number);
+  return new Date(year, month - 1, day);
+}
+
+function daysBetween(startKey, endKey) {
+  const start = dateFromKey(startKey);
+  const end = dateFromKey(endKey);
+  const millisecondsPerDay = 24 * 60 * 60 * 1000;
+  return Math.round((end - start) / millisecondsPerDay);
+}
+
+function applyMissedDayDecay(settings) {
+  if (!settings.lastCompletedDate) {
+    return settings;
+  }
+
+  const today = localDateKey();
+  const gap = daysBetween(settings.lastCompletedDate, today);
+  if (gap <= 1) {
+    return settings;
+  }
+
+  const missedDays = gap - 1;
+  settings.level = Math.max(0, settings.level - missedDays);
+
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  settings.lastCompletedDate = localDateKey(yesterday);
+  saveDeferred(settings);
+  return settings;
+}
+
+function saveDeferred(settings) {
+  window.setTimeout(() => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
+  }, 0);
+}
+
 function currentDuration() {
-  const grown = state.settings.baseDuration + state.settings.completed * state.settings.increment;
+  const effectiveLevel = state.settings.lastCompletedDate === localDateKey()
+    ? Math.max(0, state.settings.level - 1)
+    : state.settings.level;
+  const grown = state.settings.baseDuration + effectiveLevel * state.settings.increment;
   return Math.min(grown, state.settings.maxDuration);
 }
 
-function nextDurationAfterCompletion() {
-  const grown = state.settings.baseDuration + (state.settings.completed + 1) * state.settings.increment;
+function nextActiveDayDuration() {
+  const today = localDateKey();
+  const nextLevel = state.settings.lastCompletedDate === today
+    ? state.settings.level
+    : state.settings.level + 1;
+  const grown = state.settings.baseDuration + nextLevel * state.settings.increment;
   return Math.min(grown, state.settings.maxDuration);
 }
 
@@ -77,10 +149,10 @@ function renderIdle() {
   elements.sessionLabel.textContent = "Today";
   elements.timerDisplay.textContent = formatTime(duration);
   elements.progressFill.style.width = "0%";
-  elements.startButton.textContent = "Start washing dishes";
+  elements.startButton.textContent = "Start cleaning";
   elements.resetTimerButton.hidden = true;
-  elements.nextDuration.textContent = formatTime(nextDurationAfterCompletion());
-  elements.totalDone.textContent = String(state.settings.completed);
+  elements.nextDuration.textContent = formatTime(nextActiveDayDuration());
+  elements.totalDone.textContent = String(state.settings.totalDone);
   elements.baseMinutes.value = String(Math.floor(state.settings.baseDuration / 60));
   elements.baseSeconds.value = String(state.settings.baseDuration % 60);
   elements.increment.value = String(state.settings.increment);
@@ -100,7 +172,7 @@ function startTimer() {
   state.duration = currentDuration();
   state.remaining = state.duration;
   state.deadline = Date.now() + state.duration * 1000;
-  elements.sessionLabel.textContent = "Washing dishes";
+  elements.sessionLabel.textContent = "Cleaning kitchen";
   elements.startButton.textContent = "Pause";
   elements.resetTimerButton.hidden = false;
   tick();
@@ -119,7 +191,7 @@ function resumeTimer() {
   unlockAudio();
   state.running = true;
   state.deadline = Date.now() + state.remaining * 1000;
-  elements.sessionLabel.textContent = "Washing dishes";
+  elements.sessionLabel.textContent = "Cleaning kitchen";
   elements.startButton.textContent = "Pause";
   tick();
   state.timerId = window.setInterval(tick, 250);
@@ -148,10 +220,15 @@ function finishTimer() {
   state.remaining = 0;
   renderRunning();
   notifyDone();
-  state.settings.completed += 1;
+  const today = localDateKey();
+  if (state.settings.lastCompletedDate !== today) {
+    state.settings.level += 1;
+  }
+  state.settings.totalDone += 1;
+  state.settings.lastCompletedDate = today;
   state.settings.lastCompletedAt = new Date().toISOString();
   saveSettings();
-  elements.completedNextDuration.textContent = formatTime(currentDuration());
+  elements.completedNextDuration.textContent = formatTime(nextActiveDayDuration());
   elements.completionDialog.hidden = false;
   elements.completeButton.focus();
 }
@@ -283,13 +360,15 @@ elements.baseSeconds.addEventListener("change", updateBaseDuration);
 elements.increment.addEventListener("change", (event) => updateSetting("increment", event.target.value));
 elements.maxDuration.addEventListener("change", (event) => updateSetting("maxDuration", event.target.value));
 elements.resetProgressButton.addEventListener("click", () => {
-  const confirmed = window.confirm("Reset completed sessions and return the timer to the starting time?");
+  const confirmed = window.confirm("Reset progress and return the timer to the starting time?");
   if (!confirmed) {
     return;
   }
 
-  state.settings.completed = 0;
+  state.settings.level = 0;
+  state.settings.totalDone = 0;
   state.settings.lastCompletedAt = null;
+  state.settings.lastCompletedDate = null;
   saveSettings();
   resetTimer();
 });
