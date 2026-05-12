@@ -14,13 +14,25 @@
     <link rel="stylesheet" href="./styles.css">
   </head>
   <body>
+    <section class="sound-gate" id="soundGate" aria-labelledby="soundGateTitle">
+      <div class="sound-gate-panel">
+        <p class="eyebrow">Kitchen Cleaning</p>
+        <h1 id="soundGateTitle">Sound check required</h1>
+        <p>Play the finish signal before starting the timer.</p>
+        <div class="sound-gate-actions">
+          <button class="primary-button" id="gateSoundButton" type="button">Play signal</button>
+          <button class="ghost-button" id="beginButton" type="button" disabled>Begin</button>
+        </div>
+      </div>
+    </section>
+
     <main class="app" aria-live="polite">
       <section class="sound-banner" id="soundBanner">
         <div>
           <strong>Finish signal</strong>
           <span>Test the sound before starting.</span>
         </div>
-        <button class="ghost-button small-button" id="testSoundButton" type="button">Test sound</button>
+        <button class="ghost-button small-button" id="testSoundButton" type="button">Play signal</button>
       </section>
 
       <section class="timer-panel">
@@ -89,10 +101,11 @@
       <div class="completion-panel">
         <h1 id="completionTitle">Done</h1>
         <p>Next active day: <strong id="completedNextDuration">05:10</strong></p>
+        <button class="ghost-button" id="stopCompletionSoundButton" type="button">Stop signal</button>
         <button class="primary-button" id="completeButton" type="button">Good</button>
       </div>
     </div>
 
-    <script src="./app.js?v=9" defer></script>
+    <script src="./app.js?v=10" defer></script>
   </body>
 </html>

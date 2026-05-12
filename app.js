@@ -16,10 +16,18 @@ const state = {
   duration: 0,
   deadline: 0,
   timerId: null,
-  audioContext: null
+  audioContext: null,
+  soundPlaying: false,
+  soundNodes: [],
+  soundStopTimer: null,
+  soundChecked: false
 };
 
 const elements = {
+  app: document.querySelector(".app"),
+  soundGate: document.getElementById("soundGate"),
+  gateSoundButton: document.getElementById("gateSoundButton"),
+  beginButton: document.getElementById("beginButton"),
   soundBanner: document.getElementById("soundBanner"),
   testSoundButton: document.getElementById("testSoundButton"),
   sessionLabel: document.getElementById("sessionLabel"),
@@ -38,6 +46,7 @@ const elements = {
   resetProgressButton: document.getElementById("resetProgressButton"),
   completionDialog: document.getElementById("completionDialog"),
   completedNextDuration: document.getElementById("completedNextDuration"),
+  stopCompletionSoundButton: document.getElementById("stopCompletionSoundButton"),
   completeButton: document.getElementById("completeButton")
 };
 
@@ -159,6 +168,20 @@ function renderIdle() {
   elements.maxDuration.value = String(state.settings.maxDuration);
 }
 
+function renderSoundControls() {
+  const label = state.soundPlaying ? "Stop signal" : "Play signal";
+  elements.gateSoundButton.textContent = label;
+  elements.testSoundButton.textContent = label;
+  elements.beginButton.disabled = !state.soundChecked;
+  elements.stopCompletionSoundButton.hidden = !state.soundPlaying;
+}
+
+function enterApp() {
+  stopSound();
+  elements.soundGate.hidden = true;
+  elements.app.removeAttribute("aria-hidden");
+}
+
 function renderRunning() {
   elements.timerDisplay.textContent = formatTime(state.remaining);
   const elapsed = state.duration - state.remaining;
@@ -230,7 +253,8 @@ function finishTimer() {
   saveSettings();
   elements.completedNextDuration.textContent = formatTime(nextActiveDayDuration());
   elements.completionDialog.hidden = false;
-  elements.completeButton.focus();
+  renderSoundControls();
+  elements.stopCompletionSoundButton.focus();
 }
 
 async function unlockAudio() {
@@ -244,6 +268,8 @@ async function unlockAudio() {
 }
 
 async function notifyDone() {
+  stopSound();
+
   if ("vibrate" in navigator) {
     navigator.vibrate([500, 180, 500, 180, 700, 250, 900]);
   }
@@ -272,6 +298,10 @@ async function playDoneSound() {
   masterGain.gain.setValueAtTime(0.95, now + 5.8);
   masterGain.gain.exponentialRampToValueAtTime(0.0001, now + 6.2);
   masterGain.connect(compressor).connect(context.destination);
+  state.soundPlaying = true;
+  state.soundNodes = [masterGain, compressor];
+  state.soundChecked = true;
+  renderSoundControls();
 
   const pattern = [
     1568, 1175, 1568, 1175,
@@ -293,9 +323,53 @@ async function playDoneSound() {
     gain.gain.setValueAtTime(0.6, start + 0.16);
     gain.gain.exponentialRampToValueAtTime(0.0001, start + 0.22);
     oscillator.connect(gain).connect(masterGain);
+    state.soundNodes.push(oscillator, gain);
     oscillator.start(start);
     oscillator.stop(start + 0.24);
   });
+
+  state.soundStopTimer = window.setTimeout(() => {
+    state.soundPlaying = false;
+    state.soundNodes = [];
+    state.soundStopTimer = null;
+    renderSoundControls();
+  }, 6300);
+}
+
+function stopSound() {
+  if ("vibrate" in navigator) {
+    navigator.vibrate(0);
+  }
+
+  if (state.soundStopTimer !== null) {
+    window.clearTimeout(state.soundStopTimer);
+    state.soundStopTimer = null;
+  }
+
+  state.soundNodes.forEach((node) => {
+    try {
+      if (typeof node.stop === "function") {
+        node.stop();
+      }
+      if (typeof node.disconnect === "function") {
+        node.disconnect();
+      }
+    } catch {
+      // Already stopped or disconnected.
+    }
+  });
+
+  state.soundNodes = [];
+  state.soundPlaying = false;
+  renderSoundControls();
+}
+
+function toggleSound() {
+  if (state.soundPlaying) {
+    stopSound();
+  } else {
+    notifyDone();
+  }
 }
 
 function normalizeBaseDuration() {
@@ -340,14 +414,19 @@ elements.startButton.addEventListener("click", () => {
   }
 });
 
-elements.testSoundButton.addEventListener("click", notifyDone);
+elements.gateSoundButton.addEventListener("click", toggleSound);
+elements.beginButton.addEventListener("click", enterApp);
+elements.testSoundButton.addEventListener("click", toggleSound);
 
 elements.resetTimerButton.addEventListener("click", resetTimer);
 
 elements.completeButton.addEventListener("click", () => {
+  stopSound();
   elements.completionDialog.hidden = true;
   renderIdle();
 });
+
+elements.stopCompletionSoundButton.addEventListener("click", stopSound);
 
 elements.settingsToggle.addEventListener("click", () => {
   const willOpen = elements.settingsPanel.hidden;
@@ -379,4 +458,6 @@ if ("serviceWorker" in navigator) {
   });
 }
 
+elements.app.setAttribute("aria-hidden", "true");
 renderIdle();
+renderSoundControls();
