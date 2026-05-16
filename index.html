@@ -39,6 +39,15 @@
         <p class="eyebrow" id="sessionLabel">Today</p>
         <div class="timer" id="timerDisplay" role="timer" aria-label="Time remaining">05:00</div>
 
+        <div class="progress-adjuster" aria-label="Manual progress adjustment">
+          <button class="icon-button" id="decreaseProgressButton" type="button" aria-label="Decrease progress by one step">&lt;</button>
+          <div>
+            <span>Progress level</span>
+            <strong id="progressLevel">0</strong>
+          </div>
+          <button class="icon-button" id="increaseProgressButton" type="button" aria-label="Increase progress by one step">&gt;</button>
+        </div>
+
         <div class="progress-track" aria-hidden="true">
           <div class="progress-fill" id="progressFill"></div>
         </div>
@@ -106,6 +115,6 @@
       </div>
     </div>
 
-    <script src="./app.js?v=10" defer></script>
+    <script src="./app.js?v=11" defer></script>
   </body>
 </html>

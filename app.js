@@ -35,6 +35,9 @@ const elements = {
   progressFill: document.getElementById("progressFill"),
   startButton: document.getElementById("startButton"),
   resetTimerButton: document.getElementById("resetTimerButton"),
+  decreaseProgressButton: document.getElementById("decreaseProgressButton"),
+  increaseProgressButton: document.getElementById("increaseProgressButton"),
+  progressLevel: document.getElementById("progressLevel"),
   nextDuration: document.getElementById("nextDuration"),
   totalDone: document.getElementById("totalDone"),
   settingsToggle: document.getElementById("settingsToggle"),
@@ -160,6 +163,7 @@ function renderIdle() {
   elements.progressFill.style.width = "0%";
   elements.startButton.textContent = "Start cleaning";
   elements.resetTimerButton.hidden = true;
+  elements.progressLevel.textContent = String(state.settings.level);
   elements.nextDuration.textContent = formatTime(nextActiveDayDuration());
   elements.totalDone.textContent = String(state.settings.totalDone);
   elements.baseMinutes.value = String(Math.floor(state.settings.baseDuration / 60));
@@ -180,6 +184,15 @@ function enterApp() {
   stopSound();
   elements.soundGate.hidden = true;
   elements.app.removeAttribute("aria-hidden");
+}
+
+function requireSoundCheck() {
+  stopSound();
+  state.soundChecked = false;
+  elements.beginButton.disabled = true;
+  elements.soundGate.hidden = false;
+  elements.app.setAttribute("aria-hidden", "true");
+  renderSoundControls();
 }
 
 function renderRunning() {
@@ -404,6 +417,17 @@ function updateSetting(key, value) {
   }
 }
 
+function adjustProgressLevel(delta) {
+  state.settings.level = Math.max(0, state.settings.level + delta);
+  state.settings.lastCompletedAt = null;
+  state.settings.lastCompletedDate = null;
+  saveSettings();
+
+  if (!state.running && state.timerId === null) {
+    renderIdle();
+  }
+}
+
 elements.startButton.addEventListener("click", () => {
   if (state.running) {
     pauseTimer();
@@ -417,6 +441,8 @@ elements.startButton.addEventListener("click", () => {
 elements.gateSoundButton.addEventListener("click", toggleSound);
 elements.beginButton.addEventListener("click", enterApp);
 elements.testSoundButton.addEventListener("click", toggleSound);
+elements.decreaseProgressButton.addEventListener("click", () => adjustProgressLevel(-1));
+elements.increaseProgressButton.addEventListener("click", () => adjustProgressLevel(1));
 
 elements.resetTimerButton.addEventListener("click", resetTimer);
 
@@ -457,6 +483,18 @@ if ("serviceWorker" in navigator) {
     navigator.serviceWorker.register("./sw.js");
   });
 }
+
+document.addEventListener("visibilitychange", () => {
+  if (!document.hidden) {
+    requireSoundCheck();
+  }
+});
+
+window.addEventListener("pageshow", (event) => {
+  if (event.persisted) {
+    requireSoundCheck();
+  }
+});
 
 elements.app.setAttribute("aria-hidden", "true");
 renderIdle();
