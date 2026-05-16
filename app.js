@@ -292,8 +292,6 @@ function finishTimer() {
 }
 
 async function unlockAudio() {
-  state.audioContext = null;
-
   if (!state.audioContext) {
     state.audioContext = new (window.AudioContext || window.webkitAudioContext)();
   }

@@ -1,9 +1,9 @@
-const CACHE_NAME = "kitchen-cleaning-v13";
+const CACHE_NAME = "kitchen-cleaning-v14";
 const APP_SHELL = [
   "./",
   "./index.html",
   "./styles.css",
-  "./app.js?v=13",
+  "./app.js?v=14",
   "./manifest.webmanifest",
   "./icon.svg",
   "./icon-192.png",
