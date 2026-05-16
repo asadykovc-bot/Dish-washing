@@ -17,6 +17,7 @@ const state = {
   deadline: 0,
   timerId: null,
   audioContext: null,
+  audioElement: null,
   soundPlaying: false,
   soundNodes: [],
   soundStopTimer: null,
@@ -52,6 +53,8 @@ const elements = {
   stopCompletionSoundButton: document.getElementById("stopCompletionSoundButton"),
   completeButton: document.getElementById("completeButton")
 };
+
+const alarmSoundUrl = createAlarmSoundUrl();
 
 function loadSettings() {
   try {
@@ -188,6 +191,7 @@ function enterApp() {
 
 function requireSoundCheck() {
   stopSound();
+  state.audioContext = null;
   state.soundChecked = false;
   elements.beginButton.disabled = true;
   elements.soundGate.hidden = false;
@@ -271,6 +275,8 @@ function finishTimer() {
 }
 
 async function unlockAudio() {
+  state.audioContext = null;
+
   if (!state.audioContext) {
     state.audioContext = new (window.AudioContext || window.webkitAudioContext)();
   }
@@ -296,6 +302,20 @@ async function playDoneSound() {
   } catch {
     return;
   }
+
+  state.audioElement = new Audio(alarmSoundUrl);
+  state.audioElement.preload = "auto";
+  state.audioElement.volume = 1;
+  state.audioElement.addEventListener("ended", () => {
+    state.audioElement = null;
+    if (state.soundPlaying && state.soundNodes.length === 0) {
+      state.soundPlaying = false;
+      renderSoundControls();
+    }
+  }, { once: true });
+  state.audioElement.play().catch(() => {
+    state.audioElement = null;
+  });
 
   const context = state.audioContext;
   const now = context.currentTime + 0.04;
@@ -359,6 +379,18 @@ function stopSound() {
     state.soundStopTimer = null;
   }
 
+  if (state.audioElement) {
+    try {
+      state.audioElement.pause();
+      state.audioElement.currentTime = 0;
+      state.audioElement.src = "";
+      state.audioElement.load();
+    } catch {
+      // Already stopped or unavailable.
+    }
+    state.audioElement = null;
+  }
+
   state.soundNodes.forEach((node) => {
     try {
       if (typeof node.stop === "function") {
@@ -375,6 +407,67 @@ function stopSound() {
   state.soundNodes = [];
   state.soundPlaying = false;
   renderSoundControls();
+}
+
+function createAlarmSoundUrl() {
+  const sampleRate = 22050;
+  const duration = 6.3;
+  const totalSamples = Math.floor(sampleRate * duration);
+  const dataSize = totalSamples * 2;
+  const buffer = new ArrayBuffer(44 + dataSize);
+  const view = new DataView(buffer);
+  const pattern = [
+    1568, 1175, 1568, 1175,
+    1760, 1319, 1760, 1319,
+    1976, 1480, 1976, 1480,
+    2093, 1568, 2093, 1568,
+    1976, 1480, 1976, 1480,
+    1760, 1319, 1760, 1319
+  ];
+
+  writeAscii(view, 0, "RIFF");
+  view.setUint32(4, 36 + dataSize, true);
+  writeAscii(view, 8, "WAVE");
+  writeAscii(view, 12, "fmt ");
+  view.setUint32(16, 16, true);
+  view.setUint16(20, 1, true);
+  view.setUint16(22, 1, true);
+  view.setUint32(24, sampleRate, true);
+  view.setUint32(28, sampleRate * 2, true);
+  view.setUint16(32, 2, true);
+  view.setUint16(34, 16, true);
+  writeAscii(view, 36, "data");
+  view.setUint32(40, dataSize, true);
+
+  for (let sample = 0; sample < totalSamples; sample += 1) {
+    const time = sample / sampleRate;
+    const noteIndex = Math.floor(time / 0.24);
+    const noteTime = time - noteIndex * 0.24;
+    let amplitude = 0;
+
+    if (noteIndex < pattern.length && noteTime < 0.22) {
+      const frequency = pattern[noteIndex];
+      const phase = (time * frequency) % 1;
+      const wave = phase < 0.5 ? 1 : -1;
+      const envelope = noteTime < 0.015 ? noteTime / 0.015 : Math.max(0, (0.22 - noteTime) / 0.06);
+      amplitude = wave * Math.min(1, envelope) * 0.9;
+    }
+
+    view.setInt16(44 + sample * 2, Math.max(-1, Math.min(1, amplitude)) * 32767, true);
+  }
+
+  const bytes = new Uint8Array(buffer);
+  let binary = "";
+  bytes.forEach((byte) => {
+    binary += String.fromCharCode(byte);
+  });
+  return `data:audio/wav;base64,${btoa(binary)}`;
+}
+
+function writeAscii(view, offset, value) {
+  for (let index = 0; index < value.length; index += 1) {
+    view.setUint8(offset + index, value.charCodeAt(index));
+  }
 }
 
 function toggleSound() {
