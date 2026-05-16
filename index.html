@@ -30,9 +30,12 @@
       <section class="sound-banner" id="soundBanner">
         <div>
           <strong>Finish signal</strong>
-          <span>Test the sound before starting.</span>
+          <span id="wakeLockStatus">Screen awake is off.</span>
         </div>
-        <button class="ghost-button small-button" id="testSoundButton" type="button">Play signal</button>
+        <div class="banner-actions">
+          <button class="ghost-button small-button" id="testSoundButton" type="button">Play signal</button>
+          <button class="ghost-button small-button" id="wakeLockButton" type="button">Keep screen on</button>
+        </div>
       </section>
 
       <section class="timer-panel">
@@ -115,6 +118,6 @@
       </div>
     </div>
 
-    <script src="./app.js?v=12" defer></script>
+    <script src="./app.js?v=13" defer></script>
   </body>
 </html>
